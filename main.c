@@ -1,7 +1,7 @@
 #include <time.h>
-#include <sys/time.h>   // Lovely: got both time.h and times.h in sys
-#include <sys/times.h>  // For both times() and struct tms definitions
-#include <unistd.h>     // Defines _SC_CLK_TCK
+#include <sys/time.h>   
+#include <sys/times.h>  
+#include <unistd.h>     
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
