@@ -1,0 +1,98 @@
+/**
+ * Document: MaxCompiler tutorial (maxcompiler-tutorial.pdf)
+ * Chapter: 4      Example: 2      Name: Simple
+ * MaxFile name: Simple
+ * Summary:
+ * 	 Takes a stream and for each value x calculates x^2 + x.
+ */
+#include <time.h>
+#include <sys/time.h>
+#include <sys/times.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <MaxSLiCInterface.h>
+#include "Maxfiles.h"
+/*
+ * This function is used to get CLOCK_REALTIME to make benchmarks.
+ *
+*/
+double elapsedTime(void){
+    struct timespec {
+        time_t   tv_sec;        /* seconds */
+        long     tv_nsec;       /* nanoseconds */
+    }time;
+    clockid_t clk_id = CLOCK_REALTIME;
+
+    int flag;
+    double timing;
+
+    flag = clock_gettime(clk_id, &time);
+    if (flag == 0)
+        timing = (double)time.tv_sec + ((double)1.0e-9)*(double)time.tv_nsec;
+    else
+        timing = -31.0;  // If timer failed, return non-valid time
+
+    return (timing);
+}
+
+int check(float *dataOut, float *expected, int size)
+{
+	int status = 0;
+	for(int i=0; i < size; i++)
+	{
+		if(dataOut[i] != expected[i]) {
+			fprintf(stderr, "Output data @ %d = %1.8g (expected %1.8g)\n",
+				i, dataOut[i], expected[i]);
+			status = 1;
+		}
+	}
+	return status;
+}
+
+void SimpleCPU(int size, float *dataIn, float *dataOut)
+{
+	for (int i=0 ; i<size ; i++) {
+		dataOut[i] = dataIn[i]*dataIn[i] + dataIn[i];
+	}
+}
+
+float dataIn[1024];
+float dataOut[1024];
+float expected[1024];
+const int size = 1024;
+double timeStart,timeEnd,timeElapsed;
+
+int main()
+{
+	for(int i = 0; i < size; i++) {
+		dataIn[i] = i + 1;
+		dataOut[i] = 0;
+	}
+
+    timeStart = elapsedTime();
+	SimpleCPU(size, dataIn, expected);
+    timeEnd = elapsedTime();
+    timeElapsed = timeEnd - timeStart;
+    printf("Time start = %lf\n", timeStart);
+    printf("Time end   = %lf\n", timeEnd);
+    printf("Elapsed Time for CPU = %lf\n",timeElapsed);
+
+    timeStart = elapsedTime();
+	Simple(size, dataIn, dataOut);
+    timeEnd = elapsedTime();
+    timeElapsed = timeEnd - timeStart;
+    printf("Time start = %lf\n", timeStart);
+    printf("Time end   = %lf\n", timeEnd);
+    printf("Elapsed Time for DFE = %lf\n",timeElapsed);
+
+
+	printf("Running DFE.\n");
+	int status = check(dataOut, expected, size);
+	if (status)
+		printf("Test failed.\n");
+	else
+		printf("Test passed OK!\n");
+	return status;
+}
