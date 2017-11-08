@@ -1,0 +1,7 @@
+delete *.max file from CPUCode/results and RunRules/maxfiles.
+go to CPUCode/Results (by clicking on SourceCode button) and delete *.max file and then go to the RunRules/Simulation/maxfiles and delete *.max file as well.
+
+most importantly to check any result run freshly each time.
+
+make changes in local code then run the updated on webIDE, otherwise it will be fucked up.
+
