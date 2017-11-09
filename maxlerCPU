@@ -37,62 +37,106 @@ double elapsedTime(void){
     return (timing);
 }
 
-int check(float *dataOut, float *expected, int size)
+int check(float dfenrm1, float cpunrm1)
 {
-	int status = 0;
-	for(int i=0; i < size; i++)
-	{
-		if(dataOut[i] != expected[i]) {
-			fprintf(stderr, "Output data @ %d = %1.8g (expected %1.8g)\n",
-				i, dataOut[i], expected[i]);
-			status = 1;
-		}
-	}
-	return status;
+    int status = 0;
+    if(dfenrm1 != cpunrm1) {
+        status = 1;
+        printf("dfenorm1 = %f\tcpunrm1 = %f\n",dfenrm1,cpunrm1);
+    }
+    return status;
 }
 
-void SimpleCPU(int size, float *dataIn, float *dataOut)
+float SimpleCPU(int size, float *xIn)
 {
-	for (int i=0 ; i<size ; i++) {
-		dataOut[i] = dataIn[i]*dataIn[i] + dataIn[i];
-	}
+    float cpunrm1 = 0;
+    for (int i = 0 ; i < size ; i++) {
+        cpunrm1 = cpunrm1 + xIn[i]*xIn[i];
+    }
+    return cpunrm1;
 }
 
-float dataIn[1024];
-float dataOut[1024];
-float expected[1024];
-const int size = 1024;
+float *xIn;
+float *xOut;
+float *xExpected;
 double timeStart,timeEnd,timeElapsed;
 
 int main()
 {
-	for(int i = 0; i < size; i++) {
-		dataIn[i] = i + 1;
-		dataOut[i] = 0;
-	}
+    int i,j;
+    float cpunrm1 = 0;
+    float dfenrm1 = 0;
+    int size = 128;
 
-    timeStart = elapsedTime();
-	SimpleCPU(size, dataIn, expected);
-    timeEnd = elapsedTime();
-    timeElapsed = timeEnd - timeStart;
-    printf("Time start = %lf\n", timeStart);
-    printf("Time end   = %lf\n", timeEnd);
-    printf("Elapsed Time for CPU = %lf\n",timeElapsed);
+    printf("\n\n\n\n\n\n\n**********************************************************************\n");
+    for(j = 1; j <= 10; j++) {
+//  allocating memory to vector xIn
+        size = size * j * 2;
+        xIn = calloc(size, sizeof(float));
+        if (xIn == NULL) {
+            printf("Memory allocation failed for array xIn\n");
+            printf("*******\nExiting...\n*******");
+            exit(13);
+        }
+//  allocating memory to vector xOut
+        xOut = calloc(size, sizeof(float));
+        if (xOut == NULL) {
+            printf("Memory allocation failed for array xOut\n");
+            printf("*******\nExiting...\n*******");
+            exit(13);
+        }
+//  allocating memory to vector xExpected
+        xExpected = calloc(size, sizeof(float));
+        if (xExpected == NULL) {
+            printf("Memory allocation failed for array xExpected\n");
+            printf("*******\nExiting...\n*******");
+            exit(13);
+        }
 
-    timeStart = elapsedTime();
-	Simple(size, dataIn, dataOut);
-    timeEnd = elapsedTime();
-    timeElapsed = timeEnd - timeStart;
-    printf("Time start = %lf\n", timeStart);
-    printf("Time end   = %lf\n", timeEnd);
-    printf("Elapsed Time for DFE = %lf\n",timeElapsed);
+//  populating the vector
+        for (i = 0; i < size; i++) {
+            xIn[i] = (float) rand();
+            xOut[i] = 0.0;
+        }
 
+        timeStart = elapsedTime();
+        cpunrm1 = SimpleCPU(size, xIn);
+        timeEnd = elapsedTime();
+        timeElapsed = timeEnd - timeStart;
+        printf("Time start = %lf\n", timeStart);
+        printf("Time end   = %lf\n", timeEnd);
+        printf("Total Time for CPU = %lf\n", timeElapsed);
 
-	printf("Running DFE.\n");
-	int status = check(dataOut, expected, size);
-	if (status)
-		printf("Test failed.\n");
-	else
-		printf("Test passed OK!\n");
-	return status;
+        timeStart = elapsedTime();
+        Simple(size, xIn, xOut);
+        timeEnd = elapsedTime();
+        printf("DFE Time start = %lf\n", timeStart);
+        printf("DFE Time end   = %lf\n", timeEnd);
+        timeElapsed = timeEnd - timeStart;
+        printf("Time for DFE = %lf\n", timeElapsed);
+
+        timeStart = elapsedTime();
+        for (i = 0; i < size; i++) {
+            dfenrm1 = dfenrm1 + xOut[i];
+        }
+        timeEnd = elapsedTime();
+        printf("Time start = %lf\n", timeStart);
+        printf("Time end   = %lf\n", timeEnd);
+        printf("Time for local addition = %lf\n", timeEnd - timeStart);
+        printf("Total time for DFE = %lf\n", timeElapsed + timeEnd - timeStart);
+
+        printf("\n**********************************************************************\n");
+        printf("DFE # %d.\n",j);
+        int status = check(dfenrm1, cpunrm1);
+        if (status)
+            printf("Test failed.\n");
+        else
+            printf("Test passed OK!\n");
+        printf("\n**********************************************************************\n\n\n\n\n\n\n");
+
+        free(xIn);
+        free(xOut);
+        free(xExpected);
+    }
+    return 0;
 }

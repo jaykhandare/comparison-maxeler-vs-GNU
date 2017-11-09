@@ -3,7 +3,7 @@
  * Chapter: 4      Example: 2      Name: Simple
  * MaxFile name: Simple
  * Summary:
- * 	 Takes a stream and for each value x calculates x^2 + x.
+ * 	 Takes a stream and for each value x calculates x^2.
  */
 package simple;
 
@@ -15,13 +15,19 @@ class SimpleKernel extends Kernel {
 	SimpleKernel(KernelParameters parameters) {
 		super(parameters);
 
+//        DFEVar dataType =  constant.var(dfeFloat(8, 24),0.0);
+//        DFEVar result = dataType.cast(dfeFloat(8, 24));
+
+
 		// Input
 		DFEVar x = io.input("x", dfeFloat(8, 24));
 
-		DFEVar result = x*x - x;
+		DFEVar result = x * x;
+
 
 		// Output
 		io.output("y", result, dfeFloat(8, 24));
+//		IO.scalarOutput("result",dfeFloat(8, 24),control)
 	}
 }
 
